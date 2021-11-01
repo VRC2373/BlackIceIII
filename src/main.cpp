@@ -1,11 +1,17 @@
 #include "main.h"
 
 okapi::Controller controller(okapi::ControllerId::master);
-auto drivebase = okapi::ChassisControllerBuilder().withMotors({-11, 12, -13}, {18, -19, 20}).withDimensions({okapi::AbstractMotor::gearset::blue, (12.0 / 60.0)}, {{4_in, 15_in}, okapi::imev5BlueTPR}).build();
+auto drivebase = okapi::ChassisControllerBuilder().withMotors({-11, 12, -13}, {18, -19, 20}).withDimensions({okapi::AbstractMotor::gearset::green}, {{4_in, 15_in}, okapi::imev5GreenTPR}).build();
 okapi::Motor arm(15, true, okapi::AbstractMotor::gearset::red, okapi::AbstractMotor::encoderUnits::rotations);
 okapi::Motor ringleLift(1, true, okapi::AbstractMotor::gearset::red, okapi::AbstractMotor::encoderUnits::degrees);
 pros::ADIDigitalOut claw('A');
 pros::ADIDigitalOut forklift('B');
+pros::ADIDigitalIn clawSwitch('C');
+
+const auto base = drivebase -> getModel();
+bool isRingleLiftOn = false, isClawClosed = false, isForkliftUp = true;
+bool wasRinglePrevPressed = false, wasClawPrevPressed = false, wasForkliftPrevPressed = false;
+float pctSpeed = 1.0f;
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -47,7 +53,20 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-void autonomous() {}
+void autonomous()
+{
+	drivebase->moveDistanceAsync(-40_in);
+	arm.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
+	arm.tarePosition();
+	arm.moveAbsolute(-640, 100);
+	okapi::Timer timer;
+	while (!(clawSwitch.get_value() || drivebase->isSettled()))
+		;
+	isClawClosed = true;
+	claw.set_value(isClawClosed);
+	arm.moveAbsolute(-620, 70);
+	drivebase->moveDistance(35_in);
+}
 
 /**
  * Runs the operator control code. This function will be started in its own task
@@ -64,12 +83,10 @@ void autonomous() {}
  */
 void opcontrol()
 {
-	const auto base = drivebase->getModel();
-	bool isRingleLiftOn = false, isClawOpen = false, isForkliftUp = true;
-	bool wasRinglePrevPressed = false, wasClawPrevPressed = false, wasForkliftPrevPressed = false;
 	while (true)
 	{
-		base->arcade(controller.getAnalog(okapi::ControllerAnalog::leftY), controller.getAnalog(okapi::ControllerAnalog::rightX));
+		pctSpeed = isRingleLiftOn ? 0.625f : 1.0f;
+		base->arcade(controller.getAnalog(okapi::ControllerAnalog::leftY) * pctSpeed, controller.getAnalog(okapi::ControllerAnalog::rightX) * .625);
 
 		if (controller.getDigital(okapi::ControllerDigital::A) && !wasRinglePrevPressed)
 			isRingleLiftOn = !isRingleLiftOn;
@@ -77,8 +94,8 @@ void opcontrol()
 
 		ringleLift.moveVelocity(
 			controller.getDigital(okapi::ControllerDigital::B) ? -100
-			: isRingleLiftOn								   ? 0
-															   : 100);
+			: isRingleLiftOn								   ? 100
+															   : 0);
 
 		if (controller.getDigital(okapi::ControllerDigital::R1))
 			arm.moveVelocity(100);
@@ -89,8 +106,8 @@ void opcontrol()
 
 		if (controller.getDigital(okapi::ControllerDigital::L1) && !wasClawPrevPressed)
 		{
-			claw.set_value(isClawOpen);
-			isClawOpen = !isClawOpen;
+			isClawClosed = !isClawClosed;
+			claw.set_value(isClawClosed);
 		}
 		wasClawPrevPressed = controller.getDigital(okapi::ControllerDigital::L1);
 		if (controller.getDigital(okapi::ControllerDigital::L2) && !wasForkliftPrevPressed)
