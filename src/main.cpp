@@ -1,7 +1,7 @@
 #include "main.h"
 
 okapi::Controller controller(okapi::ControllerId::master);
-auto drivebase = okapi::ChassisControllerBuilder().withMotors({-11, 12, -13}, {18, -19, 20}).withDimensions({okapi::AbstractMotor::gearset::green}, {{4_in, 15_in}, okapi::imev5GreenTPR}).build();
+auto drivebase = okapi::ChassisControllerBuilder().withMotors({-11, 12, -13}, {18, -19, 20}).withDimensions({okapi::AbstractMotor::gearset::green}, {{4_in, 15_in}, okapi::imev5GreenTPR}).withOdometry().buildOdometry();
 okapi::Motor arm(15, true, okapi::AbstractMotor::gearset::red, okapi::AbstractMotor::encoderUnits::rotations);
 okapi::Motor ringleLift(1, true, okapi::AbstractMotor::gearset::red, okapi::AbstractMotor::encoderUnits::degrees);
 pros::ADIDigitalOut claw('A');
@@ -65,7 +65,20 @@ void autonomous()
 	isClawClosed = true;
 	claw.set_value(isClawClosed);
 	arm.moveAbsolute(-620, 70);
-	drivebase->moveDistance(35_in);
+	drivebase->moveDistance(25_in);
+	pros::delay(300);
+	drivebase->turnAngle(-90_deg);
+	drivebase->moveDistance(-1_ft);
+	ringleLift.moveRelative(90, 100);
+	isForkliftUp = true;
+	forklift.set_value(isForkliftUp);
+	drivebase->moveDistance(2.5_ft);
+	isForkliftUp = false;
+	forklift.set_value(isForkliftUp);
+	drivebase->moveDistance(-2_ft);
+	ringleLift.moveVelocity(100);
+	pros::delay(3000);
+	ringleLift.moveVelocity(0);
 }
 
 /**
