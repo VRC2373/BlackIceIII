@@ -55,30 +55,85 @@ void competition_initialize() {}
  */
 void autonomous()
 {
-	drivebase->moveDistanceAsync(-40_in);
-	arm.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
-	arm.tarePosition();
-	arm.moveAbsolute(-640, 100);
-	okapi::Timer timer;
-	while (!(clawSwitch.get_value() || drivebase->isSettled()))
-		;
-	isClawClosed = true;
-	claw.set_value(isClawClosed);
-	arm.moveAbsolute(-620, 70);
-	drivebase->moveDistance(25_in);
-	pros::delay(300);
-	drivebase->turnAngle(-90_deg);
-	drivebase->moveDistance(-1_ft);
-	ringleLift.moveRelative(90, 100);
-	isForkliftUp = true;
-	forklift.set_value(isForkliftUp);
-	drivebase->moveDistance(2.5_ft);
-	isForkliftUp = false;
-	forklift.set_value(isForkliftUp);
-	drivebase->moveDistance(-2_ft);
-	ringleLift.moveVelocity(100);
-	pros::delay(3000);
-	ringleLift.moveVelocity(0);
+	// Short neutural goal and alliance goal
+	if (pros::ADIDigitalIn('h').get_value())
+	{
+		drivebase->moveDistanceAsync(-40_in);
+		arm.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
+		arm.tarePosition();
+		arm.moveAbsolute(-640, 100);
+		while (!(clawSwitch.get_value() || drivebase->isSettled()))
+			;
+		isClawClosed = true;
+		claw.set_value(isClawClosed);
+		arm.moveAbsolute(-620, 70);
+		drivebase->moveDistance(25_in);
+		pros::delay(300);
+		drivebase->turnAngle(-90_deg);
+		drivebase->moveDistance(-1_ft);
+		ringleLift.moveRelative(90, 100);
+		isForkliftUp = true;
+		forklift.set_value(isForkliftUp);
+		drivebase->moveDistance(2.5_ft);
+		isForkliftUp = false;
+		forklift.set_value(isForkliftUp);
+		drivebase->moveDistance(-2_ft);
+		ringleLift.moveVelocity(100);
+		pros::delay(3000);
+		ringleLift.moveVelocity(0);
+	}
+
+	// Short neutural goal only
+	else if (pros::ADIDigitalIn('g').get_value())
+	{
+		drivebase->moveDistanceAsync(-40_in);
+		arm.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
+		arm.tarePosition();
+		arm.moveAbsolute(-640, 100);
+		while (!(clawSwitch.get_value() || drivebase->isSettled()))
+			;
+		isClawClosed = true;
+		claw.set_value(isClawClosed);
+		arm.moveAbsolute(-620, 70);
+		drivebase->moveDistance(25_in);
+	}
+
+	// Alliance goal only
+	else if (pros::ADIDigitalIn('f').get_value())
+	{
+		printf("Auton f\n");
+		arm.tarePosition();
+		arm.moveAbsolute(-640, 100);
+		ringleLift.moveRelative(90, 100);
+		isForkliftUp = true;
+		forklift.set_value(isForkliftUp);
+		pros::delay(500);
+		drivebase->setMaxVelocity(100);
+		drivebase->moveDistance(20_in);
+		isForkliftUp = false;
+		forklift.set_value(isForkliftUp);
+		pros::delay(700);
+		drivebase->moveDistance(-1.5_ft);
+		ringleLift.moveVelocity(100);
+		pros::delay(3000);
+		ringleLift.moveVelocity(0);
+	}
+
+	// Center neutural goal only
+	else if (pros::ADIDigitalIn('e').get_value())
+	{
+		drivebase->moveDistanceAsync(-60_in);
+		arm.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
+		arm.tarePosition();
+		arm.moveAbsolute(-640, 100);
+		okapi::Timer timer;
+		while (!(clawSwitch.get_value() || drivebase->isSettled()))
+			;
+		isClawClosed = true;
+		claw.set_value(isClawClosed);
+		arm.moveAbsolute(-620, 70);
+		drivebase->moveDistance(35_in);
+	}
 }
 
 /**
