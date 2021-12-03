@@ -1,9 +1,10 @@
 #include "main.h"
 
 okapi::Controller controller(okapi::ControllerId::master);
-auto drivebase = okapi::ChassisControllerBuilder().withMotors({-11, 12, -13}, {18, -19, 20}).withDimensions({okapi::AbstractMotor::gearset::green}, {{4_in, 15_in}, okapi::imev5GreenTPR}).withOdometry().buildOdometry();
-okapi::Motor arm(15, true, okapi::AbstractMotor::gearset::red, okapi::AbstractMotor::encoderUnits::rotations);
+auto drivebase = okapi::ChassisControllerBuilder().withMotors({-11, 12, -13}, {18, -19, 20}).withDimensions({okapi::AbstractMotor::gearset::green}, {{4_in, 15_in}, okapi::imev5GreenTPR}).withOdometry(okapi::StateMode::CARTESIAN).buildOdometry();
+okapi::Motor arm(15, true, okapi::AbstractMotor::gearset::red, okapi::AbstractMotor::encoderUnits::degrees);
 okapi::Motor ringleLift(1, true, okapi::AbstractMotor::gearset::red, okapi::AbstractMotor::encoderUnits::degrees);
+pros::Gps gps(2, 3.5 * 0.0254, 0.75 * 0.0254);
 pros::ADIDigitalOut claw('A');
 pros::ADIDigitalOut forklift('B');
 pros::ADIDigitalIn clawSwitch('C');
@@ -86,7 +87,10 @@ void autonomous()
 	// Short neutural goal only
 	else if (pros::ADIDigitalIn('g').get_value())
 	{
+		drivebase->setMaxVelocity(200);
 		drivebase->moveDistanceAsync(-40_in);
+		// pros::delay(200);
+		// drivebase->setMaxVelocity(200);
 		arm.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
 		arm.tarePosition();
 		arm.moveAbsolute(-640, 100);
@@ -95,7 +99,7 @@ void autonomous()
 		isClawClosed = true;
 		claw.set_value(isClawClosed);
 		arm.moveAbsolute(-620, 70);
-		drivebase->moveDistance(25_in);
+		drivebase->moveDistance(30_in);
 	}
 
 	// Alliance goal only
@@ -133,6 +137,32 @@ void autonomous()
 		claw.set_value(isClawClosed);
 		arm.moveAbsolute(-620, 70);
 		drivebase->moveDistance(35_in);
+	}
+
+	else if (pros::ADIDigitalIn('d').get_value())
+	{
+		arm.tarePosition();
+		arm.moveAbsolute(-640, 100);
+		pros::delay(1000);
+		drivebase->moveDistanceAsync(-20_in);
+		while (!(clawSwitch.get_value() || drivebase->isSettled()))
+			pros::delay(20);
+		isClawClosed = true;
+		claw.set_value(isClawClosed);
+		arm.moveAbsolute(-50, 70);
+		arm.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
+		pros::delay(1000);
+		drivebase->moveDistance(10_in);
+		gps.get_status();
+		pros::delay(500);
+		auto gpsState = gps.get_status();
+		drivebase->setState({okapi::QLength(gpsState.x), okapi::QLength(gpsState.y), okapi::QAngle(gpsState.yaw * 2_pi / 360.0) - 90_deg});
+		// Push top yellow
+		drivebase->driveToPoint({25_in, 36.008_in});
+		// Push mid yellow
+		drivebase->driveToPoint({-25_in, -36.008_in});
+		// Push bottom yellow
+		drivebase->driveToPoint({45_in, -36.008_in});
 	}
 }
 
