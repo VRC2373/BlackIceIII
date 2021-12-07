@@ -69,15 +69,19 @@ void autonomous()
 		claw.set_value(isClawClosed);
 		arm.moveAbsolute(-620, 70);
 		drivebase->moveDistance(25_in);
-		pros::delay(300);
+		arm.moveAbsolute(-50, 70);
+		drivebase->setMaxVelocity(100);
+		pros::delay(1000);
 		drivebase->turnAngle(-90_deg);
 		drivebase->moveDistance(-1_ft);
 		ringleLift.moveRelative(90, 100);
 		isForkliftUp = true;
 		forklift.set_value(isForkliftUp);
-		drivebase->moveDistance(2.5_ft);
+		drivebase->moveDistanceAsync(2.5_ft);
+		pros::delay(1500);
 		isForkliftUp = false;
 		forklift.set_value(isForkliftUp);
+		pros::delay(400);
 		drivebase->moveDistance(-2_ft);
 		ringleLift.moveVelocity(100);
 		pros::delay(3000);
@@ -89,8 +93,6 @@ void autonomous()
 	{
 		drivebase->setMaxVelocity(200);
 		drivebase->moveDistanceAsync(-40_in);
-		// pros::delay(200);
-		// drivebase->setMaxVelocity(200);
 		arm.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
 		arm.tarePosition();
 		arm.moveAbsolute(-640, 100);
@@ -154,9 +156,10 @@ void autonomous()
 		pros::delay(1000);
 		drivebase->moveDistance(10_in);
 		gps.get_status();
-		pros::delay(500);
+		pros::delay(1000);
 		auto gpsState = gps.get_status();
 		drivebase->setState({okapi::QLength(gpsState.x), okapi::QLength(gpsState.y), okapi::QAngle(gpsState.yaw * 2_pi / 360.0) - 90_deg});
+		drivebase->setMaxVelocity(100);
 		// Push top yellow
 		drivebase->driveToPoint({25_in, 36.008_in});
 		// Push mid yellow
