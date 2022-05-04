@@ -4,6 +4,31 @@
         "project_name": "Glatteis III",
         "target": "v5",
         "templates": {
+            "ARMS": {
+                "location": "/home/ian/.config/pros/templates/ARMS@2.0.1",
+                "metadata": {
+                    "origin": "local"
+                },
+                "name": "ARMS",
+                "py/object": "pros.conductor.templates.local_template.LocalTemplate",
+                "supported_kernels": "^3.5.4",
+                "system_files": [
+                    "include\\ARMS\\api.h",
+                    "include\\ARMS\\odom.h",
+                    "include\\ARMS\\config.h",
+                    "include\\ARMS\\lib.h",
+                    "include\\ARMS\\point.h",
+                    "firmware\\ARMS.a",
+                    "include\\ARMS\\purepursuit.h",
+                    "include\\ARMS\\chassis.h",
+                    "include\\ARMS\\selector.h",
+                    "include\\ARMS\\flags.h",
+                    "include\\ARMS\\pid.h"
+                ],
+                "target": "v5",
+                "user_files": [],
+                "version": "2.0.1"
+            },
             "kernel": {
                 "location": "/home/ian/.config/pros/templates/kernel@3.6.0",
                 "metadata": {

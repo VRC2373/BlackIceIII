@@ -23,6 +23,8 @@ bool wasRinglePrevPressed = false, wasClawPrevPressed = false, wasForkliftPrevPr
  */
 void initialize()
 {
+    const char *autons[] = {"Goal Rush", "Half WP", "Do Nothing"};
+    arms::selector::init(360, 1, autons);
 }
 
 /**
@@ -170,7 +172,42 @@ void autonomous()
         // Push bottom yellow
         drivebase->driveToPoint({-36.008_in, 45_in});
     }
-    printf("No Auton\n");
+    else if (abs(arms::selector::auton) == 1)
+    {
+        printf("Goal Rush\n");
+        drivebase->getModel()->arcade(.5, 0);
+        drivebase->setMaxVelocity(200);
+        drivebase->moveDistanceAsync(56_in);
+        while (!(clawSwitch1.get_value() || clawSwitch2.get_value() || drivebase->isSettled()))
+            ;
+        isClawClosed = true;
+        claw.set_value(isClawClosed);
+        arm.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
+        arm.moveVelocity(0);
+        drivebase->moveDistance(-36_in);
+    }
+    else if (abs(arms::selector::auton) == 2)
+    {
+        printf("Half WP\n");
+        drivebase->setMaxVelocity(50);
+        isForkliftUp = true;
+        forklift.set_value(isForkliftUp);
+        pros::delay(300);
+        drivebase->moveDistanceAsync(-20_in);
+        pros::delay(600);
+        isForkliftUp = false;
+        forklift.set_value(isForkliftUp);
+        pros::delay(700);
+        drivebase->moveDistance(16_in);
+        pros::delay(1000);
+        ringleLift.moveVelocity(100);
+        pros::delay(250);
+        ringleLift.moveVelocity(0);
+        pros::delay(1000);
+        ringleLift.moveVelocity(100);
+        pros::delay(2500);
+        ringleLift.moveVelocity(0);
+    }
 }
 
 /**
