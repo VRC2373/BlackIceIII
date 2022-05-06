@@ -126,51 +126,65 @@ void autonomous()
         pros::delay(2500);
         ringleLift.moveVelocity(0);
     }
-
-    // Center neutural goal only
-    else if (pros::ADIDigitalIn('e').get_value() == 5)
+    else if (pros::ADIDigitalIn('e').get_value() == 10)
     {
-        printf("Auton e\n");
+        printf("Auton e\n%d", pros::ADIDigitalIn('e').get_value());
         drivebase->getModel()->arcade(.5, 0);
         drivebase->setMaxVelocity(200);
-        drivebase->moveDistanceAsync(60_in);
+        drivebase->moveDistanceAsync(56_in);
         while (!(clawSwitch1.get_value() || clawSwitch2.get_value() || drivebase->isSettled()))
             ;
         isClawClosed = true;
         claw.set_value(isClawClosed);
-        drivebase->moveDistance(-50_in);
-    }
-    // Skills
-    else if (pros::ADIDigitalIn('d').get_value() == 5)
-    {
-        printf("Auton d\n");
-        isForkliftUp = false;
-        forklift.set_value(isForkliftUp);
-        drivebase->moveDistance(-20_in);
-        isForkliftUp = true;
-        claw.set_value(isForkliftUp);
-        drivebase->moveDistanceAsync(8_in);
-        pros::delay(1000);
-        ringleLift.moveVelocity(200);
-        // drivebase->turnAngle();
-        //
-        arm.moveAbsolute(-50, 70);
         arm.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
+        arm.moveVelocity(0);
+        drivebase->moveDistance(-36_in);
+        drivebase->getModel()->arcade(-0.5, 0);
         pros::delay(1000);
-        drivebase->moveDistance(10_in);
-        gps.get_status();
+        drivebase->getModel()->stop();
+        pros::delay(200);
+        drivebase->moveDistance(6_in);
+        drivebase->turnAngle(-90_deg);
+        drivebase->moveDistance(-10_in);
+        ringleLift.moveVelocity(100);
+        pros::delay(150);
+        ringleLift.moveVelocity(0);
         pros::delay(1000);
-        auto gpsState = gps.get_status();
-        drivebase->setState({okapi::QLength(gpsState.x), okapi::QLength(gpsState.y), okapi::QAngle(gpsState.yaw * 2_pi / 360.0) - 90_deg});
-        drivebase->setMaxVelocity(100);
-        // Push top yellow
-        drivebase->driveToPoint({36.008_in, 25_in});
-        // Push mid yellow
-        drivebase->driveToPoint({-36.008_in, -25_in});
-        // Push bottom yellow
-        drivebase->driveToPoint({-36.008_in, 45_in});
+        ringleLift.moveVelocity(60);
     }
+
+    // Skills
+    // else if (pros::ADIDigitalIn('d').get_value() == 5)
+    // {
+    //     printf("Auton d\n");
+    //     isForkliftUp = false;
+    //     forklift.set_value(isForkliftUp);
+    //     drivebase->moveDistance(-20_in);
+    //     isForkliftUp = true;
+    //     claw.set_value(isForkliftUp);
+    //     drivebase->moveDistanceAsync(8_in);
+    //     pros::delay(1000);
+    //     ringleLift.moveVelocity(200);
+    //     // drivebase->turnAngle();
+    //     //
+    //     arm.moveAbsolute(-50, 70);
+    //     arm.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
+    //     pros::delay(1000);
+    //     drivebase->moveDistance(10_in);
+    //     gps.get_status();
+    //     pros::delay(1000);
+    //     auto gpsState = gps.get_status();
+    //     drivebase->setState({okapi::QLength(gpsState.x), okapi::QLength(gpsState.y), okapi::QAngle(gpsState.yaw * 2_pi / 360.0) - 90_deg});
+    //     drivebase->setMaxVelocity(100);
+    //     // Push top yellow
+    //     drivebase->driveToPoint({36.008_in, 25_in});
+    //     // Push mid yellow
+    //     drivebase->driveToPoint({-36.008_in, -25_in});
+    //     // Push bottom yellow
+    //     drivebase->driveToPoint({-36.008_in, 45_in});
+    // }
     printf("No Auton\n");
+    printf("%d", pros::ADIDigitalIn('e').get_value());
 }
 
 /**
