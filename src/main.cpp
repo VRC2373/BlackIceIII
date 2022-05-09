@@ -12,8 +12,8 @@ pros::ADIDigitalIn clawSwitch1('A');
 pros::ADIDigitalIn clawSwitch2('B');
 
 const auto base = drivebase->getModel();
-bool isRingleLiftOn = false, isClawClosed = false, isForkliftUp = true;
-bool wasRinglePrevPressed = false, wasClawPrevPressed = false, wasForkliftPrevPressed = false;
+bool isRingleLiftOn = false, isClawClosed = false, isForkliftUp = true, brakeMode = false;
+bool wasRinglePrevPressed = false, wasClawPrevPressed = false, wasForkliftPrevPressed = false, wasBrakeModePrevPressed;
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -23,6 +23,7 @@ bool wasRinglePrevPressed = false, wasClawPrevPressed = false, wasForkliftPrevPr
  */
 void initialize()
 {
+    controller.setText(0, 0, "Coast Mode");
 }
 
 /**
@@ -56,39 +57,39 @@ void competition_initialize() {}
  */
 void autonomous()
 {
-    // Short neutural goal and alliance goal
-    if (pros::ADIDigitalIn('h').get_value() == 5)
-    {
-        printf("Auton h\n");
-        printf("%d,%d\n", pros::ADIDigitalIn('h').get_value(), pros::ADIDigitalIn('g').get_value());
-        drivebase->moveDistanceAsync(40_in);
-        while (!((clawSwitch1.get_value() && clawSwitch2.get_value()) || drivebase->isSettled()))
-            ;
-        isClawClosed = true;
-        claw.set_value(isClawClosed);
-        arm.moveAbsolute(-620, 70);
-        drivebase->moveDistance(25_in);
-        arm.moveAbsolute(-50, 70);
-        drivebase->setMaxVelocity(100);
-        pros::delay(1000);
-        drivebase->turnAngle(-90_deg);
-        drivebase->moveDistance(-1_ft);
-        ringleLift.moveRelative(90, 100);
-        isForkliftUp = true;
-        forklift.set_value(isForkliftUp);
-        drivebase->moveDistanceAsync(2.5_ft);
-        pros::delay(1500);
-        isForkliftUp = false;
-        forklift.set_value(isForkliftUp);
-        pros::delay(400);
-        drivebase->moveDistance(-2_ft);
-        ringleLift.moveVelocity(100);
-        pros::delay(3000);
-        ringleLift.moveVelocity(0);
-    }
+    // // Short neutural goal and alliance goal
+    // if (pros::ADIDigitalIn('h').get_value() == 5)
+    // {
+    //     printf("Auton h\n");
+    //     printf("%d,%d\n", pros::ADIDigitalIn('h').get_value(), pros::ADIDigitalIn('g').get_value());
+    //     drivebase->moveDistanceAsync(40_in);
+    //     while (!((clawSwitch1.get_value() && clawSwitch2.get_value()) || drivebase->isSettled()))
+    //         ;
+    //     isClawClosed = true;
+    //     claw.set_value(isClawClosed);
+    //     arm.moveAbsolute(-620, 70);
+    //     drivebase->moveDistance(25_in);
+    //     arm.moveAbsolute(-50, 70);
+    //     drivebase->setMaxVelocity(100);
+    //     pros::delay(1000);
+    //     drivebase->turnAngle(-90_deg);
+    //     drivebase->moveDistance(-1_ft);
+    //     ringleLift.moveRelative(90, 100);
+    //     isForkliftUp = true;
+    //     forklift.set_value(isForkliftUp);
+    //     drivebase->moveDistanceAsync(2.5_ft);
+    //     pros::delay(1500);
+    //     isForkliftUp = false;
+    //     forklift.set_value(isForkliftUp);
+    //     pros::delay(400);
+    //     drivebase->moveDistance(-2_ft);
+    //     ringleLift.moveVelocity(100);
+    //     pros::delay(3000);
+    //     ringleLift.moveVelocity(0);
+    // }
 
     // Short neutural goal only
-    else if (pros::ADIDigitalIn('g').get_value() == 5)
+    if (pros::ADIDigitalIn('g').get_value() == 5)
     {
         printf("Auton g");
         drivebase->getModel()->arcade(.5, 0);
@@ -184,7 +185,6 @@ void autonomous()
     //     drivebase->driveToPoint({-36.008_in, 45_in});
     // }
     printf("No Auton\n");
-    printf("%d", pros::ADIDigitalIn('e').get_value());
 }
 
 /**
@@ -204,7 +204,7 @@ void opcontrol()
 {
     while (true)
     {
-        base->arcade(controller.getAnalog(okapi::ControllerAnalog::leftY), controller.getAnalog(okapi::ControllerAnalog::rightX));
+        base->arcade(controller.getAnalog(okapi::ControllerAnalog::leftY), controller.getAnalog(okapi::ControllerAnalog::rightX), 0.03);
 
         if (controller.getDigital(okapi::ControllerDigital::A) && !wasRinglePrevPressed)
             isRingleLiftOn = !isRingleLiftOn;
@@ -234,6 +234,14 @@ void opcontrol()
             isForkliftUp = !isForkliftUp;
         }
         wasForkliftPrevPressed = controller.getDigital(okapi::ControllerDigital::L2);
+
+        if (controller.getDigital(okapi::ControllerDigital::Y) && !wasBrakeModePrevPressed)
+        {
+            brakeMode = !brakeMode;
+            base->setBrakeMode(brakeMode ? okapi::AbstractMotor::brakeMode::hold : okapi::AbstractMotor::brakeMode::coast);
+            controller.setText(0, 0, brakeMode ? "Brake Mode" : "Coast Mode");
+        }
+        wasBrakeModePrevPressed = controller.getDigital(okapi::ControllerDigital::Y);
 
         pros::delay(20);
     }
